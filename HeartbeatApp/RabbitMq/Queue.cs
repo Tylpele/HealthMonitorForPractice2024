@@ -57,16 +57,12 @@ namespace HeartbeatApp.RabbitMq
                                       basicProperties: properties,
                                       body: message);
 
-                Console.WriteLine($"Message sent to queue '{queueName}' successfully.");
-            }
-            catch (OperationInterruptedException ex)
-            {
-                Console.WriteLine($"Error sending message to queue '{queueName}': {ex.Message}");
-                Environment.Exit(1); // Terminate the application with a non-zero exit code
+                //Console.WriteLine($"Message sent to queue '{queueName}' successfully.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Unexpected error sending message to queue '{queueName}': {ex.Message}");
+                File.Create("../../ChatBot/ChatBot/stop.flag").Dispose();
                 Environment.Exit(1); // Terminate the application with a non-zero exit code
             }
         }
@@ -88,18 +84,33 @@ namespace HeartbeatApp.RabbitMq
                 var message = Encoding.UTF8.GetString(body);
 
                 if (ea.BasicProperties.Headers != null &&
-                    ea.BasicProperties.Headers.TryGetValue("Type", out var typeHeader) &&
-                    typeHeader.ToString() == "heartbeat")
+                    ea.BasicProperties.Headers.TryGetValue("Type", out var typeHeader))
                 {
-                    onMessageReceived(message);
+                    var headerValue = Encoding.UTF8.GetString((byte[])typeHeader);
+                    if (headerValue == "heartbeat")
+                    {
+                        Console.WriteLine("Received heartbeat message: " + message);
+                        // Handle heartbeat message here if needed
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ignoring message with type: " + headerValue);
+                        _channel.BasicNack(ea.DeliveryTag, false, true);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Received message without a valid Type header: " + message);
+                    _channel.BasicNack(ea.DeliveryTag, false, true);
                 }
             };
 
             _channel.BasicConsume(
                 queue: queueName,
-                autoAck: true,
+                autoAck: false,
                 consumer: consumer
             );
         }
+
     }
 }
