@@ -23,19 +23,18 @@ namespace HeartbeatApp.RabbitMq
             catch (BrokerUnreachableException ex)
             {
                 Console.WriteLine($"Error connecting to RabbitMQ: {ex.Message}");
-                Environment.Exit(1);
+                
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Unexpected error: {ex.Message}");
-                Environment.Exit(1);
+                
             }
         }
 
         public static void SendMessage(string queueName)
         {
-            try
-            {
+         
                 _channel.QueueDeclare(
                     queue: queueName,
                     durable: false,
@@ -57,14 +56,10 @@ namespace HeartbeatApp.RabbitMq
                                       basicProperties: properties,
                                       body: message);
 
-                //Console.WriteLine($"Message sent to queue '{queueName}' successfully.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Unexpected error sending message to queue '{queueName}': {ex.Message}");
-                File.Create("../../ChatBot/ChatBot/stop.flag").Dispose();
-                Environment.Exit(1); // Terminate the application with a non-zero exit code
-            }
+               
+               
+                
+            
         }
 
         public static void StartListening(string queueName, Action<string> onMessageReceived)
@@ -91,6 +86,7 @@ namespace HeartbeatApp.RabbitMq
                     {
                         Console.WriteLine("Received heartbeat message: " + message);
                         // Handle heartbeat message here if needed
+                        _channel.BasicAck(ea.DeliveryTag, false);
                     }
                     else
                     {
