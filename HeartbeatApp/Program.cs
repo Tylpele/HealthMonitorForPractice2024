@@ -1,5 +1,8 @@
 using HeartbeatApp.Models;
+using NLog;
+using NLog.Web;
 
+var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,6 +13,7 @@ builder.Services.AddHostedService<CheckPreQueue>();
 builder.Services.AddHostedService<CheckQueue>();
 builder.Services.AddHostedService<CheckPostQueue>();
 
+logger.Debug("init main");
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

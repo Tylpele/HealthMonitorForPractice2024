@@ -1,5 +1,6 @@
 ﻿
 using HeartbeatApp.RabbitMq;
+using NLog;
 
 namespace HeartbeatApp.Models
 {
@@ -9,6 +10,7 @@ namespace HeartbeatApp.Models
         private Timer sendTimer;
         private Timer listenTimer;
         private readonly string flagPath = "../../chatbot/webapp/stop.flag";
+        private readonly NLog.Logger _logger = LogManager.GetCurrentClassLogger();
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -27,11 +29,11 @@ namespace HeartbeatApp.Models
             try
             {
                 Queue.SendMessage(queueName);
-                Console.WriteLine("Message sent to queue.");
+                _logger.Info("Message sent to "+ queueName);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending message to queue: {ex.Message}");
+                _logger.Error($"Error sending message to queue: {ex.Message}");
                 CreateFlagFile();
             }
         }
@@ -42,13 +44,13 @@ namespace HeartbeatApp.Models
             {
                 Queue.StartListening(queueName, (message) =>
                 {
-                    Console.WriteLine("Message received from queue: " + message);
+                    _logger.Info("Message received from queue: " + message);
                     DeleteFlagFileIfExists(flagPath);
                 });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error starting to listen to the queue: {ex.Message}");
+                _logger.Error($"Error starting to listen to the queue: {ex.Message}");
             }
         }
 
@@ -59,28 +61,28 @@ namespace HeartbeatApp.Models
                 if (!File.Exists(flagPath))
                 {
                     File.Create(flagPath).Dispose();
-                    Console.WriteLine("Flag file created.");
+                    _logger.Info("Flag file created.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating flag file: {ex.Message}");
+                _logger.Error($"Error creating flag file: {ex.Message}");
             }
         }
 
-        private static void DeleteFlagFileIfExists(string filepath)
+        private void DeleteFlagFileIfExists(string filepath)
         {
             try
             {
                 if (File.Exists(filepath))
                 {
                     File.Delete(filepath);
-                    Console.WriteLine("Flag file deleted.");
+                    _logger.Info("Flag file deleted.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting flag file: {ex.Message}");
+                _logger.Error($"Error deleting flag file: {ex.Message}");
             }
         }
     }

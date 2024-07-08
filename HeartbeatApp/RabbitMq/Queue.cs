@@ -84,8 +84,6 @@ namespace HeartbeatApp.RabbitMq
                     var headerValue = Encoding.UTF8.GetString((byte[])typeHeader);
                     if (headerValue == "heartbeat")
                     {
-                        Console.WriteLine("Received heartbeat message: " + message);
-                        // Handle heartbeat message here if needed
                         _channel.BasicAck(ea.DeliveryTag, false);
                     }
                     else
